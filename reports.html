@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Reports</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤍</div>
+      <div>
+        <div class="brand-name">HopeBridge</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="reports.html" class="active"><span class="nav-icon">📋</span> Reports</a>
+      <a href="map.html"><span class="nav-icon">🗺️</span> Map View</a>
+      <a href="network.html"><span class="nav-icon">🔗</span> Shelter Network</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="HB.logout()"><span style="margin-right:.5rem">🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
+
+    <!-- Header row -->
+    <div class="page-header" style="padding-bottom:.75rem;flex-shrink:0">
+      <h1>Reports</h1>
+      <p id="report-count">Loading…</p>
+    </div>
+
+    <div style="display:flex;flex:1;overflow:hidden">
+
+      <!-- Table column -->
+      <div class="reports-list" style="flex:1;padding:0 1.5rem 1.5rem;display:flex;flex-direction:column;gap:.875rem;overflow:hidden">
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input id="search-input" type="text" class="form-control search-input" placeholder="Search reports…" oninput="renderTable()" />
+          </div>
+          <select id="filter-status" class="form-control" style="width:auto" onchange="renderTable()">
+            <option value="">All Statuses</option>
+            <option value="reported">Reported</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <select id="filter-cat" class="form-control" style="width:auto" onchange="renderTable()">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table class="reports-table">
+            <thead>
+              <tr>
+                <th>Report</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="reports-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel hidden" id="detail-panel">
+        <div class="detail-header">
+          <h3>Report Details</h3>
+          <button class="detail-close" onclick="closePanel()">✕</button>
+        </div>
+        <div class="detail-body" id="detail-body"></div>
+        <div class="detail-actions" id="detail-actions"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/reports.js"></script>
+</body>
+</html>

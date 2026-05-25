@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Map View</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤍</div>
+      <div>
+        <div class="brand-name">HopeBridge</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="reports.html"><span class="nav-icon">📋</span> Reports</a>
+      <a href="map.html" class="active"><span class="nav-icon">🗺️</span> Map View</a>
+      <a href="network.html"><span class="nav-icon">🔗</span> Shelter Network</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="HB.logout()"><span style="margin-right:.5rem">🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main map-layout">
+
+    <!-- Header -->
+    <div class="map-header">
+      <div>
+        <h1 style="font-size:1.4rem;font-weight:700;font-family:var(--font-serif)">Map View</h1>
+        <p id="map-count" style="font-size:.8rem;color:var(--text-muted);margin-top:.1rem">Loading…</p>
+      </div>
+      <div class="map-legend">
+        <div class="leg-item">
+          <div class="leg-dot" style="background:#F59E0B"></div>
+          Open / In Progress
+        </div>
+        <div class="map-divider"></div>
+        <div class="leg-item">
+          <div class="leg-dot" style="background:#10B981"></div>
+          Resolved
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+</body>
+</html>

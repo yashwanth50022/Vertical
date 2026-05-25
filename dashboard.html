@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤍</div>
+      <div>
+        <div class="brand-name">HopeBridge</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <a href="dashboard.html" class="active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="reports.html"><span class="nav-icon">📋</span> Reports</a>
+      <a href="map.html"><span class="nav-icon">🗺️</span> Map View</a>
+      <a href="network.html"><span class="nav-icon">🔗</span> Shelter Network</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="HB.logout()"><span style="margin-right:.5rem">🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p>Community support overview and recent activity</p>
+    </div>
+    <div class="page-body">
+
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--primary-light);color:var(--primary)">📊</div>
+          <div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Reports</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--amber-bg);color:#92400e">🔔</div>
+          <div><div class="stat-value" id="stat-reported">—</div><div class="stat-label">Reported</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--blue-bg);color:#1e3a8a">⏳</div>
+          <div><div class="stat-value" id="stat-progress">—</div><div class="stat-label">In Progress</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:var(--green-bg);color:#065f46">✅</div>
+          <div><div class="stat-value" id="stat-resolved">—</div><div class="stat-label">Resolved</div></div>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="dashboard-grid">
+
+        <!-- Recent reports -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Recent Reports</h2>
+            <a href="reports.html" style="font-size:.8rem;color:var(--primary);font-weight:500">View all →</a>
+          </div>
+          <table class="recent-table" id="recent-table">
+            <tbody id="recent-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Category breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <h2>By Category</h2>
+          </div>
+          <div class="card-body" id="cat-breakdown"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

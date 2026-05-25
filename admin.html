@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Admin Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="login-page">
+  <div class="login-blob login-blob-1"></div>
+  <div class="login-blob login-blob-2"></div>
+
+  <div style="position:relative;z-index:1;width:100%;max-width:26rem">
+    <a href="index.html" class="back-link">← Back to Citizen Portal</a>
+
+    <div class="login-card">
+      <div class="login-stripe"></div>
+      <div class="login-inner">
+        <div class="login-brand">
+          <div class="icon">🤍</div>
+          <div>
+            <div class="name">HopeBridge</div>
+            <div class="sub">Secure Administrator Access</div>
+          </div>
+        </div>
+
+        <h2 style="font-size:1.625rem;font-weight:700">Welcome <em style="font-style:italic;color:var(--primary)">back</em></h2>
+        <p style="font-size:.875rem;color:var(--text-muted);margin-top:.25rem;font-weight:300">
+          Sign in to manage reports, track cases, and coordinate shelter responses.
+        </p>
+
+        <div class="login-divider"></div>
+
+        <div id="login-error" class="login-error hidden">
+          ⚠️ <span id="error-msg">Incorrect password. Please try again.</span>
+        </div>
+
+        <form onsubmit="doLogin(event)">
+          <div class="form-group">
+            <label class="form-label">📧 Email Address</label>
+            <input id="l-email" type="email" class="form-control" placeholder="admin@hopebridge.org" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">🔒 Password</label>
+            <input id="l-pass" type="password" class="form-control" placeholder="••••••••" required />
+          </div>
+          <button id="login-btn" type="submit" class="btn btn-primary btn-block" style="margin-top:.5rem">
+            Sign In →
+          </button>
+        </form>
+
+        <div class="login-hint">
+          <div class="stripe"></div>
+          <p>Demo credentials: use any email with password <a onclick="document.getElementById('l-pass').value='admin123'">admin123</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('login-btn');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  setTimeout(() => {
+    if (document.getElementById('l-pass').value === 'admin123') {
+      sessionStorage.setItem('hb_admin', 'true');
+      window.location.href = 'dashboard.html';
+    } else {
+      document.getElementById('login-error').classList.remove('hidden');
+      btn.innerHTML = 'Sign In →';
+      btn.disabled = false;
+    }
+  }, 600);
+}
+</script>
+</body>
+</html>

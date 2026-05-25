@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Shelter Network</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Network-specific styles ── */
+    .network-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .shelter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      position: relative;
+      transition: box-shadow .15s;
+    }
+    .shelter-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+    .shelter-card.critical { border-left: 4px solid #ef4444; }
+    .shelter-card.warning  { border-left: 4px solid #f59e0b; }
+    .shelter-card.ok       { border-left: 4px solid #10b981; }
+    .shelter-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: .75rem;
+    }
+    .shelter-name { font-weight: 700; font-size: .95rem; color: var(--text); }
+    .shelter-type-badge {
+      font-size: .68rem;
+      font-weight: 600;
+      padding: .2rem .6rem;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .type-people   { background: #ede9fe; color: #5b21b6; }
+    .type-children { background: #fce7f3; color: #9d174d; }
+    .type-animals  { background: #d1fae5; color: #065f46; }
+    .capacity-bar-wrap {
+      margin: .75rem 0 .4rem;
+    }
+    .capacity-bar-track {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .capacity-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+    .fill-ok       { background: #10b981; }
+    .fill-warning  { background: #f59e0b; }
+    .fill-critical { background: #ef4444; }
+    .capacity-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: .35rem;
+    }
+    .shelter-meta {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .6rem;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    .shelter-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: 1rem;
+    }
+    .btn-transfer {
+      flex: 1;
+      padding: .45rem .75rem;
+      font-size: .78rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      background: var(--primary);
+      color: #fff;
+      transition: opacity .15s;
+    }
+    .btn-transfer:hover { opacity: .87; }
+    .btn-transfer:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-contact {
+      flex: 1;
+      padding: .45rem .75rem;
+      font-size: .78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      background: transparent;
+      color: var(--text);
+      transition: background .15s;
+    }
+    .btn-contact:hover { background: var(--bg); }
+
+    /* ── Transfer modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      margin: 1rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      transform: translateY(12px);
+      transition: transform .2s;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-header {
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; font-size: 1.1rem;
+      cursor: pointer; color: var(--text-muted); line-height: 1;
+    }
+    .modal-body  { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: .875rem; }
+    .modal-footer { padding: .875rem 1.5rem 1.25rem; display: flex; gap: .625rem; justify-content: flex-end; }
+
+    /* ── Transfers log ── */
+    .transfers-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .transfers-table th {
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-muted);
+      padding: .5rem .75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .transfers-table td {
+      padding: .65rem .75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .transfers-table tr:last-child td { border-bottom: none; }
+    .transfers-table tr:hover td { background: var(--bg); }
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+    .badge-accepted  { background: #dbeafe; color: #1e3a8a; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    .badge-declined  { background: #fee2e2; color: #7f1d1d; }
+
+    /* ── Contact modal ── */
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .75rem;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      font-size: .85rem;
+    }
+    .contact-row .icon { font-size: 1.1rem; }
+    .contact-row a { color: var(--primary); text-decoration: none; font-weight: 500; }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .875rem;
+      color: var(--text);
+    }
+    .network-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
+      margin-bottom: 1.75rem;
+    }
+    .ns-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      text-align: center;
+    }
+    .ns-val  { font-size: 1.75rem; font-weight: 800; font-family: var(--font-serif); line-height: 1; }
+    .ns-lbl  { font-size: .72rem; color: var(--text-muted); margin-top: .3rem; }
+    .ns-red  { color: #ef4444; }
+    .ns-amb  { color: #f59e0b; }
+    .ns-grn  { color: #10b981; }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🤍</div>
+      <div>
+        <div class="brand-name">HopeBridge</div>
+        <div class="brand-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <a href="dashboard.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="reports.html"><span class="nav-icon">📋</span> Reports</a>
+      <a href="map.html"><span class="nav-icon">🗺️</span> Map View</a>
+      <a href="network.html" class="active"><span class="nav-icon">🔗</span> Shelter Network</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button onclick="HB.logout()"><span style="margin-right:.5rem">🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div class="page-header">
+      <h1>Shelter Network</h1>
+      <p>View capacity across all shelters and coordinate transfers</p>
+    </div>
+
+    <div class="page-body">
+
+      <!-- Summary row -->
+      <div class="network-summary" id="network-summary"></div>
+
+      <!-- Shelter cards -->
+      <div class="section-title">All Shelters</div>
+      <div class="network-grid" id="network-grid"></div>
+
+      <!-- Transfer history -->
+      <div class="section-title">Transfer Requests</div>
+      <div class="card" style="overflow:hidden">
+        <div style="overflow-x:auto">
+          <table class="transfers-table" id="transfers-table">
+            <thead>
+              <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Category</th>
+                <th>Count</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transfers-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="transfer-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>🔄 Request Transfer</h3>
+      <button class="modal-close" onclick="closeTransferModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">From Shelter</label>
+        <select id="t-from" class="form-control" onchange="filterToShelters()"></select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">To Shelter</label>
+        <select id="t-to" class="form-control"></select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Category</label>
+        <select id="t-category" class="form-control"></select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Number of people / animals</label>
+        <input id="t-count" type="number" min="1" max="50" value="1" class="form-control" />
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Notes (optional)</label>
+        <textarea id="t-notes" class="form-control" rows="2" placeholder="Any special requirements or notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTransferModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTransfer()">Send Request →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="contact-modal-title">Contact Shelter</h3>
+      <button class="modal-close" onclick="closeContactModal()">✕</button>
+    </div>
+    <div class="modal-body" id="contact-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeContactModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+if (!HB.requireAdmin()) { /* redirected */ }
+
+/* ── helpers ── */
+function pct(sh)   { return sh.capacity > 0 ? Math.round((sh.occupied / sh.capacity) * 100) : 0; }
+function free(sh)  { return sh.capacity - sh.occupied; }
+function fillCls(p){ return p >= 90 ? "fill-critical" : p >= 70 ? "fill-warning" : "fill-ok"; }
+function cardCls(p){ return p >= 90 ? "critical" : p >= 70 ? "warning" : "ok"; }
+function typeBadge(type) {
+  const map = { people: ["type-people","👥 People"], children: ["type-children","👶 Children"], animals: ["type-animals","🐾 Animals"] };
+  const [cls, label] = map[type] || ["type-people", type];
+  return `<span class="shelter-type-badge ${cls}">${label}</span>`;
+}
+function transferStatusBadge(s) {
+  const map = { pending: "badge-pending", accepted: "badge-accepted", completed: "badge-completed", declined: "badge-declined" };
+  return `<span class="badge ${map[s] || "badge-amber"}">${s.charAt(0).toUpperCase()+s.slice(1)}</span>`;
+}
+
+/* ── render summary ── */
+function renderSummary() {
+  const shelters = HB.getShelters();
+  const critical = shelters.filter(s => pct(s) >= 90).length;
+  const totalFree = shelters.reduce((a, s) => a + free(s), 0);
+  const totalCap  = shelters.reduce((a, s) => a + s.capacity, 0);
+  const totalOcc  = shelters.reduce((a, s) => a + s.occupied, 0);
+  document.getElementById("network-summary").innerHTML = `
+    <div class="ns-card"><div class="ns-val">${shelters.length}</div><div class="ns-lbl">Total Shelters</div></div>
+    <div class="ns-card"><div class="ns-val ns-red">${critical}</div><div class="ns-lbl">Near Capacity (&ge;90%)</div></div>
+    <div class="ns-card"><div class="ns-val ns-grn">${totalFree}</div><div class="ns-lbl">Free Spaces Across Network</div></div>
+  `;
+}
+
+/* ── render shelter cards ── */
+function renderCards() {
+  const shelters = HB.getShelters();
+  document.getElementById("network-grid").innerHTML = shelters.map(sh => {
+    const p = pct(sh);
+    const f = free(sh);
+    return `
+      <div class="shelter-card ${cardCls(p)}">
+        <div class="shelter-top">
+          <div class="shelter-name">${sh.name}</div>
+          ${typeBadge(sh.type)}
+        </div>
+        <div class="shelter-meta">
+          <span>📍 ${sh.address}</span>
+        </div>
+        <div class="capacity-bar-wrap">
+          <div class="capacity-bar-track">
+            <div class="capacity-bar-fill ${fillCls(p)}" style="width:${p}%"></div>
+          </div>
+          <div class="capacity-text">
+            <span>${sh.occupied} / ${sh.capacity} occupied</span>
+            <span style="font-weight:600;color:${p>=90?'#ef4444':p>=70?'#f59e0b':'#10b981'}">${f} free</span>
+          </div>
+        </div>
+        <div class="shelter-actions">
+          <button class="btn-transfer" onclick="openTransferModal('${sh.id}')" ${f < 1 ? 'disabled title="No space available"' : ''}>
+            🔄 Transfer
+          </button>
+          <button class="btn-contact" onclick="openContactModal('${sh.id}')">📞 Contact</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ── render transfers log ── */
+function renderTransfers() {
+  const transfers = HB.getTransfers();
+  const shelters  = HB.getShelters();
+  const shName    = id => shelters.find(s => s.id === id)?.name ?? id;
+  const tbody = document.getElementById("transfers-body");
+
+  if (transfers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><div class="icon">🔄</div>No transfer requests yet</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = transfers.map(t => {
+    const actionBtns = t.status === "pending" ? `
+      <button onclick="setTransferStatus(${t.id},'accepted')"  style="font-size:.72rem;padding:.25rem .55rem;background:#dbeafe;color:#1e3a8a;border:none;border-radius:.35rem;cursor:pointer;font-family:inherit;font-weight:600;margin-right:.25rem">✓ Accept</button>
+      <button onclick="setTransferStatus(${t.id},'declined')"  style="font-size:.72rem;padding:.25rem .55rem;background:#fee2e2;color:#7f1d1d;border:none;border-radius:.35rem;cursor:pointer;font-family:inherit;font-weight:600">✕ Decline</button>
+    ` : t.status === "accepted" ? `
+      <button onclick="setTransferStatus(${t.id},'completed')" style="font-size:.72rem;padding:.25rem .55rem;background:#d1fae5;color:#065f46;border:none;border-radius:.35rem;cursor:pointer;font-family:inherit;font-weight:600">✅ Complete</button>
+    ` : "—";
+    return `
+      <tr>
+        <td style="font-weight:500">${shName(t.fromShelterId)}</td>
+        <td style="font-weight:500">${shName(t.toShelterId)}</td>
+        <td style="color:var(--text-muted)">${HB.getCategoryLabel(t.category)}</td>
+        <td style="font-weight:600">${t.count}</td>
+        <td>${transferStatusBadge(t.status)}</td>
+        <td style="color:var(--text-muted)">${HB.formatDate(t.createdAt)}</td>
+        <td>${actionBtns}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function setTransferStatus(id, status) {
+  const t = HB.updateTransfer(id, { status });
+  if (status === "completed") {
+    // Update occupancy: move count from one shelter to other
+    HB.updateShelterOccupancy(t.fromShelterId, -t.count);
+    HB.updateShelterOccupancy(t.toShelterId,   +t.count);
+    renderCards();
+    renderSummary();
+  }
+  renderTransfers();
+}
+
+/* ── Transfer modal ── */
+let transferFromId = null;
+
+function openTransferModal(fromId) {
+  transferFromId = fromId;
+  const shelters = HB.getShelters();
+
+  // From select
+  const fromSel = document.getElementById("t-from");
+  fromSel.innerHTML = shelters.map(s =>
+    `<option value="${s.id}" ${s.id === fromId ? "selected" : ""}>${s.name} (${free(s)} free)</option>`
+  ).join("");
+
+  // Category select
+  const catSel = document.getElementById("t-category");
+  catSel.innerHTML = HB.CATEGORIES.map(c =>
+    `<option value="${c.value}">${c.label}</option>`
+  ).join("");
+
+  filterToShelters();
+  document.getElementById("transfer-modal").classList.add("open");
+}
+
+function filterToShelters() {
+  const fromId   = document.getElementById("t-from").value;
+  const shelters = HB.getShelters();
+  const toSel    = document.getElementById("t-to");
+  toSel.innerHTML = shelters
+    .filter(s => s.id !== fromId && free(s) > 0)
+    .map(s => `<option value="${s.id}">${s.name} (${free(s)} free)</option>`)
+    .join("");
+  if (!toSel.options.length) {
+    toSel.innerHTML = `<option disabled>No shelters with available space</option>`;
+  }
+}
+
+function closeTransferModal() {
+  document.getElementById("transfer-modal").classList.remove("open");
+}
+
+function submitTransfer() {
+  const from     = document.getElementById("t-from").value;
+  const to       = document.getElementById("t-to").value;
+  const category = document.getElementById("t-category").value;
+  const count    = parseInt(document.getElementById("t-count").value) || 1;
+  const notes    = document.getElementById("t-notes").value;
+  if (!to || to === from) { alert("Please select a valid destination shelter."); return; }
+  HB.addTransfer({ fromShelterId: from, toShelterId: to, category, count, notes });
+  closeTransferModal();
+  renderTransfers();
+}
+
+/* ── Contact modal ── */
+function openContactModal(shId) {
+  const sh = HB.getShelters().find(s => s.id === shId);
+  if (!sh) return;
+  document.getElementById("contact-modal-title").textContent = `📞 ${sh.name}`;
+  document.getElementById("contact-modal-body").innerHTML = `
+    <div class="contact-row"><span class="icon">📍</span><span>${sh.address}</span></div>
+    <div class="contact-row"><span class="icon">📞</span><a href="tel:${sh.phone}">${sh.phone}</a></div>
+    <div class="contact-row"><span class="icon">✉️</span><a href="mailto:${sh.email}">${sh.email}</a></div>
+    <div class="contact-row">
+      <span class="icon">📊</span>
+      <span>${sh.occupied} / ${sh.capacity} occupied &mdash; <strong>${free(sh)} spaces free</strong></span>
+    </div>
+    <div class="contact-row">
+      <span class="icon">🏷️</span>
+      <span>Accepts: ${sh.accepts.map(HB.getCategoryLabel.bind(HB)).join(", ")}</span>
+    </div>
+  `;
+  document.getElementById("contact-modal").classList.add("open");
+}
+
+function closeContactModal() {
+  document.getElementById("contact-modal").classList.remove("open");
+}
+
+// Close modals on overlay click
+document.querySelectorAll(".modal-overlay").forEach(el => {
+  el.addEventListener("click", e => { if (e.target === el) el.classList.remove("open"); });
+});
+
+/* ── Init ── */
+renderSummary();
+renderCards();
+renderTransfers();
+</script>
+</body>
+</html>

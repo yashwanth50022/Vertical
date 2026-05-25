@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HopeBridge – Report a Need</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="portal-nav">
+  <div class="brand">
+    <div class="brand-icon">🤍</div>
+    <span class="brand-name">HopeBridge</span>
+  </div>
+  <a href="admin.html" class="admin-link">Admin Portal →</a>
+</nav>
+
+<!-- SUCCESS SCREEN (hidden until form submitted) -->
+<div id="success-screen" class="success-screen hidden">
+  <div>
+    <div class="success-icon">✅</div>
+    <h2 style="font-size:1.875rem;font-weight:700;font-family:var(--font-serif);margin-bottom:.5rem">Report Submitted</h2>
+    <p style="color:var(--text-muted);max-width:22rem;margin:0 auto">Your report has been received and will be reviewed by our team.</p>
+    <div class="success-id">
+      <div class="label">Confirmation Number</div>
+      <div class="value" id="confirm-id">#00000</div>
+    </div>
+    <button class="btn btn-primary" onclick="resetForm()">Submit Another Report</button>
+  </div>
+</div>
+
+<!-- MAIN FORM -->
+<div id="form-wrapper">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="pill">🤍 Community Support Platform</div>
+    <h2>Report a <em>need</em> in your community</h2>
+    <p>Help us connect people with the support they need — from emergency shelter and child care to animal welfare and community resources.</p>
+  </div>
+
+  <!-- Step bar -->
+  <div class="steps-bar" id="steps-bar"></div>
+
+  <!-- Form card -->
+  <div class="form-card">
+
+    <!-- Step 0: Category -->
+    <div id="step-0">
+      <div class="form-card-header">
+        <div class="form-card-icon">🏷️</div>
+        <div>
+          <h3>Select Category</h3>
+          <p>What type of support is needed?</p>
+        </div>
+      </div>
+      <div class="form-card-body">
+        <div class="category-list" id="category-list"></div>
+      </div>
+    </div>
+
+    <!-- Step 1: Details -->
+    <div id="step-1" class="hidden">
+      <div class="form-card-header">
+        <div class="form-card-icon">📝</div>
+        <div>
+          <h3>Describe the Situation</h3>
+          <p>Provide as much detail as possible</p>
+        </div>
+      </div>
+      <div class="form-card-body">
+        <div class="form-group">
+          <label class="form-label">Title (optional)</label>
+          <input id="f-title" type="text" class="form-control" placeholder="Brief title for this report" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description <span style="color:var(--red)">*</span></label>
+          <textarea id="f-desc" class="form-control" rows="4" placeholder="Describe what you observed or what help is needed..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Your Name (optional)</label>
+            <input id="f-name" type="text" class="form-control" placeholder="Anonymous" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Contact (optional)</label>
+            <input id="f-contact" type="text" class="form-control" placeholder="Phone or email" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Location -->
+    <div id="step-2" class="hidden">
+      <div class="form-card-header">
+        <div class="form-card-icon">📍</div>
+        <div>
+          <h3>Pin the Location</h3>
+          <p>Enter an address or click the map</p>
+        </div>
+      </div>
+      <div class="form-card-body">
+        <div class="form-group">
+          <label class="form-label">Address <span style="color:var(--red)">*</span></label>
+          <input id="f-address" type="text" class="form-control" placeholder="Street address or location description" />
+        </div>
+        <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-bottom:.5rem">or click the map to drop a pin</p>
+        <div id="location-map" style="height:240px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)"></div>
+        <p id="coords-display" style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.5rem">Pinned at 12.97160, 77.59460</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm -->
+    <div id="step-3" class="hidden">
+      <div class="form-card-header">
+        <div class="form-card-icon">✅</div>
+        <div>
+          <h3>Review &amp; Submit</h3>
+          <p>Confirm your report details before submitting</p>
+        </div>
+      </div>
+      <div class="form-card-body">
+        <div id="summary" style="background:var(--bg);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:.875rem"></div>
+      </div>
+    </div>
+
+    <!-- Nav footer -->
+    <div class="form-card-footer">
+      <button id="btn-back" class="btn btn-ghost" onclick="prevStep()">← Back</button>
+      <button id="btn-next" class="btn btn-primary" onclick="nextStep()">Next →</button>
+      <button id="btn-submit" class="btn btn-primary hidden" onclick="submitForm()">Submit Report ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/data.js"></script>
+<script src="js/citizen.js"></script>
+</body>
+</html>
