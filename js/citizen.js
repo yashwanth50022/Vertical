@@ -8,6 +8,39 @@ let selectedCategory = "";
 
 const TOTAL_STEPS = 4;
 
+// Get current geolocation
+function getMyLocation() {
+  const btn = document.getElementById("geo-btn");
+  btn.disabled = true;
+  btn.innerHTML = "🔄 Detecting...";
+  
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        pickedLat = position.coords.latitude;
+        pickedLng = position.coords.longitude;
+        document.getElementById("f-address").value = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
+        document.getElementById("coords-display").textContent = "Pinned at " + pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
+        if (locationMarker) {
+          locationMarker.setLatLng([pickedLat, pickedLng]);
+          if (locationMap) locationMap.setView([pickedLat, pickedLng], 13);
+        }
+        btn.disabled = false;
+        btn.innerHTML = "📍 Use Current Location";
+      },
+      function(error) {
+        alert("Unable to get location. Please allow location access or enter manually.");
+        btn.disabled = false;
+        btn.innerHTML = "📍 Use Current Location";
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+    btn.disabled = false;
+    btn.innerHTML = "📍 Use Current Location";
+  }
+}
+
 function renderStepBar() {
   const labels = ["Category", "Details", "Location", "Confirm"];
   const bar = document.getElementById("steps-bar");
@@ -99,40 +132,6 @@ function initLocationMap() {
   });
 }
 
-function useCurrentLocation() {
-  if (!navigator.geolocation) {
-    alert("Geolocation is not supported by your browser.");
-    return;
-  }
-  const btn = event.target;
-  const originalText = btn.textContent;
-  btn.textContent = "📍 Getting location...";
-  btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(
-    function (position) {
-      pickedLat = position.coords.latitude;
-      pickedLng = position.coords.longitude;
-      if (locationMarker) {
-        locationMarker.setLatLng([pickedLat, pickedLng]);
-      }
-      if (locationMap) {
-        locationMap.setView([pickedLat, pickedLng], 15);
-      }
-      document.getElementById("coords-display").textContent =
-        "Pinned at " + pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
-      const addr = document.getElementById("f-address");
-      addr.value = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
-      btn.textContent = originalText;
-      btn.disabled = false;
-    },
-    function (error) {
-      alert("Could not get location: " + error.message);
-      btn.textContent = originalText;
-      btn.disabled = false;
-    }
-  );
-}
-
 function renderSummary() {
   const rows = [
     ["Category", HB.getCategoryLabel(selectedCategory)],
@@ -155,10 +154,6 @@ function submitForm() {
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
   setTimeout(() => {
-    const citizenInfo = HB.getCitizenInfo();
-    const name = document.getElementById("f-name").value || citizenInfo.name;
-    const contact = document.getElementById("f-contact").value || citizenInfo.contact;
-    
     const report = HB.addReport({
       category:        selectedCategory,
       title:           document.getElementById("f-title").value,
@@ -166,14 +161,9 @@ function submitForm() {
       locationAddress: document.getElementById("f-address").value,
       latitude:        pickedLat,
       longitude:       pickedLng,
-      reporterName:    name,
-      reporterContact: contact,
+      reporterName:    document.getElementById("f-name").value,
+      reporterContact: document.getElementById("f-contact").value,
     });
-    
-    if (HB.isCitizen()) {
-      HB.createSMSCheck(report.id);
-    }
-    
     document.getElementById("confirm-id").textContent = HB.idPad(report.id);
     document.getElementById("form-wrapper").classList.add("hidden");
     document.getElementById("success-screen").classList.remove("hidden");
@@ -189,27 +179,21 @@ function resetForm() {
   locationMarker = null;
   document.getElementById("f-title").value = "";
   document.getElementById("f-desc").value = "";
-  document.getElementById("f-name").value = "";
-  document.getElementById("f-contact").value = "";
   document.getElementById("f-address").value = "";
+  const user = JSON.parse(localStorage.getItem("hb_citizen_user") || "{}");
+  document.getElementById("f-name").value = user.name || "";
+  document.getElementById("f-contact").value = user.phone || "";
   document.getElementById("success-screen").classList.add("hidden");
   document.getElementById("form-wrapper").classList.remove("hidden");
   renderCategories();
   renderStepBar();
   showStep(0);
-  prefillCitizenInfo();
-}
-
-function prefillCitizenInfo() {
-  if (HB.isCitizen()) {
-    const info = HB.getCitizenInfo();
-    document.getElementById("f-name").value = info.name;
-    document.getElementById("f-contact").value = info.contact;
-  }
 }
 
 // Init
-renderCategories();
-renderStepBar();
-showStep(0);
-prefillCitizenInfo();
+checkCitizenLogin();
+if (localStorage.getItem("hb_citizen_user")) {
+  renderCategories();
+  renderStepBar();
+  showStep(0);
+}

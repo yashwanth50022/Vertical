@@ -343,6 +343,15 @@ select.form-control { cursor: pointer; }
 }
 .back-link:hover { color: var(--text); }
 
+/* ─── Citizen login screen ─── */
+.login-screen {
+  display: none; min-height: 100vh; align-items: center;
+  justify-content: center; padding: 2rem; position: relative; overflow: hidden;
+}
+.login-container {
+  position: relative; z-index: 1; width: 100%; max-width: 26rem;
+}
+
 /* ─── Dashboard grid ─── */
 .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
 @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }

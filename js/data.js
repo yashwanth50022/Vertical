@@ -109,6 +109,53 @@ const HB = {
   deleteReport(id) {
     this.saveReports(this.getReports().filter(r => r.id !== id));
   },
+
+  /* ── SMS & Notifications ── */
+  checkStaleReports() {
+    const reports = this.getReports();
+    const now = new Date();
+    const STALE_HOURS = 24;
+    
+    reports.forEach(r => {
+      if (r.status === "reported") {
+        const createdTime = new Date(r.createdAt);
+        const hoursElapsed = (now - createdTime) / (1000 * 60 * 60);
+        
+        if (hoursElapsed >= STALE_HOURS) {
+          const lastNotified = localStorage.getItem("hb_notified_" + r.id);
+          const lastNotifiedTime = lastNotified ? new Date(lastNotified) : null;
+          const hoursSinceNotified = lastNotifiedTime ? (now - lastNotifiedTime) / (1000 * 60 * 60) : Infinity;
+          
+          if (hoursSinceNotified >= STALE_HOURS || !lastNotified) {
+            this.sendSMSReminder(r);
+            localStorage.setItem("hb_notified_" + r.id, now.toISOString());
+          }
+        }
+      }
+    });
+  },
+  
+  sendSMSReminder(report) {
+    const message = "HopeBridge: Your report #" + this.idPad(report.id) + " (" + this.getCategoryLabel(report.category) + ") has been pending for 24+ hours. Is the situation still present at " + report.locationAddress + "? Reply YES to keep active or NO to close this report.";
+    
+    const notifications = JSON.parse(localStorage.getItem("hb_sms_notifications") || "[]");
+    notifications.push({
+      id: "sms_" + Date.now(),
+      reportId: report.id,
+      message: message,
+      phone: report.reporterContact,
+      sentAt: new Date().toISOString(),
+      read: false,
+    });
+    localStorage.setItem("hb_sms_notifications", JSON.stringify(notifications));
+    
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("HopeBridge Report Follow-up", {
+        body: "Your report #" + this.idPad(report.id) + " has been pending for 24+ hours. Is the situation still active?",
+        icon: "🤍",
+      });
+    }
+  },
   getStats() {
     const reports = this.getReports();
     const byCategory = this.CATEGORIES.map(c => ({
@@ -137,69 +184,30 @@ const HB = {
   },
 
   /* ── Citizen Auth ── */
-  isCitizen() { return sessionStorage.getItem("hb_citizen") === "true"; },
-  getCitizenInfo() {
-    return {
-      name: sessionStorage.getItem("hb_citizen_name") || "",
-      email: sessionStorage.getItem("hb_citizen_email") || "",
-      contact: sessionStorage.getItem("hb_citizen_contact") || "",
-    };
+  citizenLogin() {
+    const name = document.getElementById("login-name").value.trim();
+    const phone = document.getElementById("login-phone").value.trim();
+    const email = document.getElementById("login-email").value.trim();
+    
+    if (!name) { alert("Please enter your name."); return; }
+    if (!phone) { alert("Please enter your phone number."); return; }
+    
+    const userData = { name, phone, email, loginTime: new Date().toISOString() };
+    localStorage.setItem("hb_citizen_user", JSON.stringify(userData));
+    checkCitizenLogin();
+    renderCategories();
+    renderStepBar();
+    showStep(0);
   },
-  loginCitizen(name, email, contact) {
-    sessionStorage.setItem("hb_citizen", "true");
-    sessionStorage.setItem("hb_citizen_name", name);
-    sessionStorage.setItem("hb_citizen_email", email);
-    sessionStorage.setItem("hb_citizen_contact", contact);
-  },
+  
   logoutCitizen() {
-    sessionStorage.removeItem("hb_citizen");
-    sessionStorage.removeItem("hb_citizen_name");
-    sessionStorage.removeItem("hb_citizen_email");
-    sessionStorage.removeItem("hb_citizen_contact");
+    localStorage.removeItem("hb_citizen_user");
     window.location.href = "index.html";
   },
-
-  /* ── SMS Verification ── */
-  getSMSChecks() {
-    try { return JSON.parse(localStorage.getItem("hb_sms_checks") || "[]"); }
-    catch { return []; }
-  },
-  saveSMSChecks(checks) { localStorage.setItem("hb_sms_checks", JSON.stringify(checks)); },
-  createSMSCheck(reportId) {
-    const checks = this.getSMSChecks();
-    const check = {
-      id: Date.now(),
-      reportId: reportId,
-      createdAt: new Date().toISOString(),
-      status: "pending",
-      response: null,
-    };
-    checks.push(check);
-    this.saveSMSChecks(checks);
-    return check;
-  },
-  updateSMSCheck(checkId, response) {
-    const checks = this.getSMSChecks();
-    const check = checks.find(c => c.id === checkId);
-    if (check) {
-      check.status = "completed";
-      check.response = response;
-      this.saveSMSChecks(checks);
-    }
-    return check;
-  },
-  getStaleReports(hoursThreshold = 24) {
-    const reports = this.getReports();
-    const now = new Date();
-    return reports.filter(r => {
-      if (r.status !== "reported") return false;
-      const createdTime = new Date(r.createdAt);
-      const hoursDiff = (now - createdTime) / (1000 * 60 * 60);
-      return hoursDiff >= hoursThreshold;
-    });
-  },
-  getPendingSMSChecks() {
-    return this.getSMSChecks().filter(c => c.status === "pending");
+  
+  getCitizenUser() {
+    try { return JSON.parse(localStorage.getItem("hb_citizen_user") || "null"); }
+    catch { return null; }
   },
 
   /* ── Utilities ── */
@@ -240,3 +248,7 @@ const HB = {
 };
 
 HB.seedIfEmpty();
+
+// Check for stale reports every 30 minutes
+setInterval(() => HB.checkStaleReports(), 30 * 60 * 1000);
+HB.checkStaleReports();
