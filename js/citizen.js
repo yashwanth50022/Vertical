@@ -76,7 +76,10 @@ function showStep(n) {
 
 function canProceed() {
   if (currentStep === 0) return !!selectedCategory;
-  if (currentStep === 1) return !!document.getElementById("f-desc").value.trim();
+  if (currentStep === 1) {
+    const description = document.getElementById("f-desc").value.trim();
+    return !!description && !!photoData;
+  }
   if (currentStep === 2) return !!document.getElementById("f-address").value.trim();
   return true;
 }
@@ -84,7 +87,7 @@ function canProceed() {
 function nextStep() {
   if (!canProceed()) {
     if (currentStep === 0) alert("Please select a category.");
-    if (currentStep === 1) alert("Please describe the situation.");
+    if (currentStep === 1) alert("Please describe the situation and attach a photo.");
     if (currentStep === 2) alert("Please enter an address.");
     return;
   }
@@ -186,6 +189,10 @@ function renderSummary() {
 }
 
 function submitForm() {
+  if (!photoData) {
+    alert("Please upload a photo before submitting.");
+    return;
+  }
   const btn = document.getElementById("btn-submit");
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
