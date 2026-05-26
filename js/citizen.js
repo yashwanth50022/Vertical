@@ -5,6 +5,7 @@ let pickedLng = 77.5946;
 let locationMap = null;
 let locationMarker = null;
 let selectedCategory = "";
+let photoData = null;
 
 const TOTAL_STEPS = 4;
 
@@ -114,6 +115,30 @@ function selectCategory(value, btn) {
   btn.classList.add("selected");
 }
 
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    photoData = null;
+    document.getElementById("photo-preview").src = "";
+    document.getElementById("photo-preview-container").classList.add("hidden");
+    return;
+  }
+  if (!file.type.startsWith("image/")) {
+    alert("Please upload a valid image file.");
+    event.target.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function () {
+    photoData = reader.result;
+    const preview = document.getElementById("photo-preview");
+    preview.src = photoData;
+    document.getElementById("photo-preview-container").classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
+}
+
 function initLocationMap() {
   if (locationMap) return;
   locationMap = L.map("location-map").setView([pickedLat, pickedLng], 13);
@@ -141,12 +166,23 @@ function renderSummary() {
     ["Reporter", document.getElementById("f-name").value || "Anonymous"],
     ["Contact", document.getElementById("f-contact").value || "(none)"],
   ];
-  document.getElementById("summary").innerHTML = rows.map(([k, v]) => `
+  let html = rows.map(([k, v]) => `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;font-size:.875rem">
       <span style="color:var(--text-muted);font-weight:500;flex-shrink:0">${k}</span>
       <span style="font-weight:500;text-align:right;max-width:65%;overflow-wrap:break-word">${v}</span>
     </div>
   `).join('<div style="height:1px;background:var(--border)"></div>');
+
+  if (photoData) {
+    html += `
+      <div style="margin-top:1rem;text-align:center">
+        <div style="font-size:.875rem;font-weight:600;color:var(--text-muted);margin-bottom:.5rem">Attached Photo</div>
+        <img src="${photoData}" alt="Report photo" style="max-width:100%;border-radius:var(--radius);border:1px solid var(--border);" />
+      </div>
+    `;
+  }
+
+  document.getElementById("summary").innerHTML = html;
 }
 
 function submitForm() {
@@ -163,6 +199,7 @@ function submitForm() {
       longitude:       pickedLng,
       reporterName:    document.getElementById("f-name").value,
       reporterContact: document.getElementById("f-contact").value,
+      photo:           photoData,
     });
     document.getElementById("confirm-id").textContent = HB.idPad(report.id);
     document.getElementById("form-wrapper").classList.add("hidden");
@@ -180,6 +217,10 @@ function resetForm() {
   document.getElementById("f-title").value = "";
   document.getElementById("f-desc").value = "";
   document.getElementById("f-address").value = "";
+  document.getElementById("f-photo").value = "";
+  photoData = null;
+  document.getElementById("photo-preview").src = "";
+  document.getElementById("photo-preview-container").classList.add("hidden");
   const user = JSON.parse(localStorage.getItem("hb_citizen_user") || "{}");
   document.getElementById("f-name").value = user.name || "";
   document.getElementById("f-contact").value = user.phone || "";

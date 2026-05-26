@@ -123,6 +123,14 @@
           <label class="form-label">Description <span style="color:var(--red)">*</span></label>
           <textarea id="f-desc" class="form-control" rows="4" placeholder="Describe what you observed or what help is needed..."></textarea>
         </div>
+        <div class="form-group">
+          <label class="form-label">Photo (optional)</label>
+          <input id="f-photo" type="file" accept="image/*" class="form-control" onchange="handlePhotoUpload(event)" />
+          <div id="photo-preview-container" class="photo-preview-container hidden">
+            <img id="photo-preview" class="photo-preview" alt="Photo preview" />
+            <div class="photo-preview-label">Photo selected</div>
+          </div>
+        </div>
       </div>
     </div>
 

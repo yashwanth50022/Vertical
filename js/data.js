@@ -88,6 +88,7 @@ const HB = {
       reporterName:    data.reporterName || "",
       reporterContact: data.reporterContact || "",
       adminNotes:      "",
+      photo:          data.photo || null,
       createdAt:       new Date().toISOString(),
       resolvedAt:      null,
     };

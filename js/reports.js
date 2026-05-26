@@ -83,12 +83,23 @@ function renderPanel() {
     r.resolvedAt   ? ["Resolved", HB.formatDate(r.resolvedAt)] : null,
   ].filter(Boolean);
 
-  document.getElementById("detail-body").innerHTML = fields.map(([k, v]) => `
+  let detailHtml = fields.map(([k, v]) => `
     <div class="detail-field">
       <div class="field-label">${k}</div>
       <div class="field-value">${v}</div>
     </div>
   `).join("");
+
+  if (r.photo) {
+    detailHtml = `
+      <div class="detail-field">
+        <div class="field-label">Photo</div>
+        <div class="field-value"><img src="${r.photo}" alt="Report photo" style="width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:240px;object-fit:cover" /></div>
+      </div>
+    ` + detailHtml;
+  }
+
+  document.getElementById("detail-body").innerHTML = detailHtml;
 
   const actions = [];
   if (r.status === "reported") {
