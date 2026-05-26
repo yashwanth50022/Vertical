@@ -136,6 +136,72 @@ const HB = {
     window.location.href = "admin.html";
   },
 
+  /* ── Citizen Auth ── */
+  isCitizen() { return sessionStorage.getItem("hb_citizen") === "true"; },
+  getCitizenInfo() {
+    return {
+      name: sessionStorage.getItem("hb_citizen_name") || "",
+      email: sessionStorage.getItem("hb_citizen_email") || "",
+      contact: sessionStorage.getItem("hb_citizen_contact") || "",
+    };
+  },
+  loginCitizen(name, email, contact) {
+    sessionStorage.setItem("hb_citizen", "true");
+    sessionStorage.setItem("hb_citizen_name", name);
+    sessionStorage.setItem("hb_citizen_email", email);
+    sessionStorage.setItem("hb_citizen_contact", contact);
+  },
+  logoutCitizen() {
+    sessionStorage.removeItem("hb_citizen");
+    sessionStorage.removeItem("hb_citizen_name");
+    sessionStorage.removeItem("hb_citizen_email");
+    sessionStorage.removeItem("hb_citizen_contact");
+    window.location.href = "index.html";
+  },
+
+  /* ── SMS Verification ── */
+  getSMSChecks() {
+    try { return JSON.parse(localStorage.getItem("hb_sms_checks") || "[]"); }
+    catch { return []; }
+  },
+  saveSMSChecks(checks) { localStorage.setItem("hb_sms_checks", JSON.stringify(checks)); },
+  createSMSCheck(reportId) {
+    const checks = this.getSMSChecks();
+    const check = {
+      id: Date.now(),
+      reportId: reportId,
+      createdAt: new Date().toISOString(),
+      status: "pending",
+      response: null,
+    };
+    checks.push(check);
+    this.saveSMSChecks(checks);
+    return check;
+  },
+  updateSMSCheck(checkId, response) {
+    const checks = this.getSMSChecks();
+    const check = checks.find(c => c.id === checkId);
+    if (check) {
+      check.status = "completed";
+      check.response = response;
+      this.saveSMSChecks(checks);
+    }
+    return check;
+  },
+  getStaleReports(hoursThreshold = 24) {
+    const reports = this.getReports();
+    const now = new Date();
+    return reports.filter(r => {
+      if (r.status !== "reported") return false;
+      const createdTime = new Date(r.createdAt);
+      const hoursDiff = (now - createdTime) / (1000 * 60 * 60);
+      return hoursDiff >= hoursThreshold;
+    });
+  },
+  getPendingSMSChecks() {
+    return this.getSMSChecks().filter(c => c.status === "pending");
+  },
+
   /* ── Utilities ── */
   formatDate(iso) {
     return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });

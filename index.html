@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HopeBridge – Report a Need</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="style/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
@@ -15,8 +15,63 @@
     <div class="brand-icon">🤍</div>
     <span class="brand-name">HopeBridge</span>
   </div>
-  <a href="admin.html" class="admin-link">Admin Portal →</a>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <span id="citizen-status" style="font-size:0.875rem;color:var(--text-muted)"></span>
+    <a href="admin.html" class="admin-link">Admin Portal →</a>
+    <button id="logout-btn" class="btn btn-ghost btn-sm hidden" onclick="HB.logoutCitizen()" style="display:inline-flex">Logout</button>
+  </div>
 </nav>
+
+<!-- LOGIN SCREEN (shown if not logged in) -->
+<div id="login-screen" class="login-page hidden">
+  <div class="login-blob login-blob-1"></div>
+  <div class="login-blob login-blob-2"></div>
+
+  <div style="position:relative;z-index:1;width:100%;max-width:26rem">
+    <div class="login-card">
+      <div class="login-stripe"></div>
+      <div class="login-inner">
+        <div class="login-brand">
+          <div class="icon">🤍</div>
+          <div>
+            <div class="name">HopeBridge</div>
+            <div class="sub">Citizen Portal</div>
+          </div>
+        </div>
+
+        <h2 style="font-size:1.625rem;font-weight:700">Sign In or Continue</h2>
+        <p style="font-size:.875rem;color:var(--text-muted);margin-top:.25rem;font-weight:300">
+          Log in to save your profile and submit reports faster. You can also continue as guest.
+        </p>
+
+        <div class="login-divider"></div>
+
+        <form onsubmit="doLoginCitizen(event)">
+          <div class="form-group">
+            <label class="form-label">📧 Full Name</label>
+            <input id="login-name" type="text" class="form-control" placeholder="Your full name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">✉️ Email Address</label>
+            <input id="login-email" type="email" class="form-control" placeholder="your@email.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">📱 Phone (optional)</label>
+            <input id="login-contact" type="text" class="form-control" placeholder="Your phone number" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:.5rem">
+            Sign In →
+          </button>
+        </form>
+
+        <div class="login-hint">
+          <div class="stripe"></div>
+          <p>Or <a onclick="continueAsGuest()" style="cursor:pointer;color:var(--primary);font-weight:600">continue as guest</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- SUCCESS SCREEN (hidden until form submitted) -->
 <div id="success-screen" class="success-screen hidden">
@@ -104,7 +159,10 @@
       <div class="form-card-body">
         <div class="form-group">
           <label class="form-label">Address <span style="color:var(--red)">*</span></label>
-          <input id="f-address" type="text" class="form-control" placeholder="Street address or location description" />
+          <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+            <input id="f-address" type="text" class="form-control" placeholder="Street address or location description" style="flex:1" />
+            <button type="button" class="btn btn-primary" onclick="useCurrentLocation()" style="white-space:nowrap">📍 Current</button>
+          </div>
         </div>
         <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-bottom:.5rem">or click the map to drop a pin</p>
         <div id="location-map" style="height:240px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)"></div>
@@ -138,5 +196,48 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/data.js"></script>
 <script src="js/citizen.js"></script>
+<script>
+function showLoginScreen() {
+  document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("form-wrapper").classList.add("hidden");
+  document.getElementById("logout-btn").classList.add("hidden");
+  document.getElementById("citizen-status").textContent = "";
+}
+
+function showFormScreen() {
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("form-wrapper").classList.remove("hidden");
+  document.getElementById("logout-btn").classList.remove("hidden");
+  const info = HB.getCitizenInfo();
+  document.getElementById("citizen-status").textContent = info.name ? "👤 " + info.name : "👤 Logged in";
+}
+
+function doLoginCitizen(e) {
+  e.preventDefault();
+  const name = document.getElementById("login-name").value.trim();
+  const email = document.getElementById("login-email").value.trim();
+  const contact = document.getElementById("login-contact").value.trim();
+  
+  if (!name) {
+    alert("Please enter your name.");
+    return;
+  }
+  
+  HB.loginCitizen(name, email, contact);
+  resetForm();
+  showFormScreen();
+}
+
+function continueAsGuest() {
+  showFormScreen();
+}
+
+// Check if citizen is logged in on page load
+if (HB.isCitizen()) {
+  showFormScreen();
+} else {
+  showLoginScreen();
+}
+</script>
 </body>
 </html>
